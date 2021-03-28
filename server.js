@@ -1,26 +1,65 @@
 'use strict';
 
-require('dotenv').config();
-const express = require('express');
-const app = express();
-const cors = require('cors');
-app.use(cors());
 
+// declaring variable ;
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+// initialize the server
+const server = express();
+server.use(cors());
+
+//declaring
 const PORT = process.env.PORT || 3000;
 
-app.get('/hello', (request, response) => {
-  response.status(200).send('Hello');
+
+//test the server
+//server.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
+
+// routes
+server.get('/location', handelLocationRequest);
+server.get('/restaurants', handelWeatheRequest);
+
+
+
+function handelLocationRequest(req, res) {
+
+  const searchQuery = req.query;
+  console.log(searchQuery);
+
+  const locationsRawData = require('./data/location.json');
+  const location = new Location(locationsRawData[0])
+  res.send(location);
+}
+function handelWeatheRequest(req, res) {
+  const weathersRawData = require('./data/weather.json');
+  const weathersData = [];
+
+  weathersRawData.nearby_restaurants.forEach(weather => {
+    weathersData.push(new Weather(weather));
+  });
+
+  res.send(weathersData);
+
+}
+
+// constructors
+
+function Location(data) {
+  this.formatted_query = data.display_name;
+  this.latitude = data.lat;
+  this.longitude = data.lon;
+}
+
+function Weather(data) {
+  this.forecast = data.forecast;
+  this.time = data.time;
+ 
+}
+
+server.use('*', (req, res) => {
+  res.send('all good nothing to see here!');
 });
-
-app.get('/data', (request, response) => {
-  let airplanes = {
-    departure: Date.now(),
-    canFly: true,
-    pilot: 'Well Trained',
-  };
-  response.status(200).json(airplanes);
-});
-
-app.use('*', (request, response) => response.send('Sorry, that route does not exist.'));
-
-app.listen(PORT,() => console.log(`Listening on port ${PORT}`));
+//test the server
+server.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
