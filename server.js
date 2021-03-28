@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 
 // routes
 server.get('/location', handelLocationRequest);
-server.get('/restaurants', handelWeatheRequest);
+server.get('/weather', handelWeatheRequest);
 
 
 
@@ -33,10 +33,14 @@ function handelLocationRequest(req, res) {
   res.send(location);
 }
 function handelWeatheRequest(req, res) {
+  const searchQuery = req.query;
+  console.log(searchQuery);
+
   const weathersRawData = require('./data/weather.json');
+  const weatherRaw=weathersRawData.data;
   const weathersData = [];
 
-  weathersRawData.nearby_restaurants.forEach(weather => {
+  weatherRaw.forEach(weather => {
     weathersData.push(new Weather(weather));
   });
 
@@ -53,13 +57,19 @@ function Location(data) {
 }
 
 function Weather(data) {
-  this.forecast = data.forecast;
-  this.time = data.time;
- 
+  this.forecast = data.weather.description;
+  this.time = data.datetime;
+
 }
 
-server.use('*', (req, res) => {
+/*server.use('*', (req, res) => {
   res.send('all good nothing to see here!');
-});
+});*/
 //test the server
 server.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
+
+//error handler
+server.use('*', (req, res) => {
+  let status =404;
+  res.status(status).send({status:status , msg:'Not found'});
+});
