@@ -46,3 +46,15 @@ its a place where you can insert a city name and get it location and the weather
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
 -->
+
+
+# lab 08
+Number and name of feature: _____1___________________________
+
+Estimate of time needed to complete: __15hour___
+
+Start time: ___3pm__
+
+Finish time: __-___
+
+Actual time needed to complete: _____
