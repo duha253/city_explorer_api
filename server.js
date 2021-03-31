@@ -20,13 +20,13 @@ const WEATHER_CODE_API_KEY = process.env.WEATHER_CODE_API_KEY; //API key for PAR
 const PARK_CODE_API_KEY = process.env.PARK_CODE_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;//database
 
-lab07
+
 //let city;
 //test the server
 //server.listen(PORT, () => console.log(`Listening to Port ${PO
 // Database Connection Setup
 const client = new pg.Client(DATABASE_URL);
- main
+
 
 // routes
 server.get('/location', handelLocationRequest);
