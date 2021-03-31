@@ -26,7 +26,7 @@ const client = new pg.Client(DATABASE_URL);
 // routes
 server.get('/location', handelLocationRequest);
 server.get('/weather', handelWeatheRequest);
-server.get('/park', handelParkRequest);
+server.get('/parks', handelParkRequest);
 
 
 
@@ -122,31 +122,39 @@ server.get('/', (request, response) => {
   response.status(200).send('ok');
 });
 
-server.get('/add', handelAddUsers);
-server.get('/users', selectUsers);
+server.get('/add', getLocationDB);
+server.get('/',selectUsers );
+server.get('/', saveToDB);
 // Add location, based on QueryString Params
 
-function handelAddUsers(data ,res ,req) {
-  const { city, display_name , lat ,lon } = req.query;
 
-  // const sqlQuery = `INSERT INTO users(first_name, last_name) VALUES(${first_name}, ${last_name})`;
+// function to check the database for exist value
+function getLocationDB(req,res) {
+  const cityName = req.query.city;
+  if (!cityName) {
+    res.status(404).send('no search query was provided');
+  }
 
-  const sqlQuery = `INSERT INTO location (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4)`;
-  const safeValues = [
+  let sql = `SELECT * FROM location WHERE search_query=$1;`;
+  let values = [cityName];
+  return client.query(sql, values).then((result) => {
+    return result.rows;
+  });
+}
+
+
+function saveToDB(data) {
+  console.log('before saving', data);
+  let sql = `INSERT INTO location (search_query,formatted_query,latitude,longitude) VALUES ($1,$2,$3,$4)`;
+  let values = [
     data.search_query,
     data.formatted_query,
     data.latitude,
     data.longitude,
   ];
-  // add user to db
-  client.query(sqlQuery, safeValues).then(result => {
-
-    res.status(200).json(result);
-  }).catch(error => {
-    console.log(error);
-    res.status(500).send('Internal server error');
+  client.query(sql, values).then((result) => {
+    console.log('saved', result.rows);
   });
-
 }
 
 
