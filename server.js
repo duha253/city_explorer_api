@@ -23,14 +23,13 @@ const WEATHER_CODE_API_KEY = process.env.WEATHER_CODE_API_KEY;
 const PARK_CODE_API_KEY = process.env.PARK_CODE_API_KEY;
 
 //let city;
-
 //test the server
 //server.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
 
 // routes
 server.get('/location', handelLocationRequest);
 server.get('/weather', handelWeatheRequest);
-server.get('/park', handelParkRequest);
+server.get('/parks', handelParkRequest);
 
 
 
