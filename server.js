@@ -11,10 +11,10 @@ const pg = require('pg');
 
 // initialize the server
 const app = express();
-app .use(cors());
+app.use(cors());
 
 //declaring a port
-const PORT = process.env.PORT; //API key for locatins
+const PORT = process.env.PORT || 3000; //API key for locatins
 const GEO_CODE_API_KEY = process.env.GEO_CODE_API_KEY; //API key for wheather
 const WEATHER_CODE_API_KEY = process.env.WEATHER_CODE_API_KEY; //API key for PARK
 const PARK_CODE_API_KEY = process.env.PARK_CODE_API_KEY;
@@ -27,13 +27,19 @@ const YELP_API_KEY = process.env.YELP_API_KEY;
 //test the server
 //server.listen(PORT, () => console.log(`Listening to Port ${PO
 // Database Connection Setup
-const client = new pg.Client(DATABASE_URL);
+const client = new pg.Client(process.env.DATABASE_URL);
+client.connect().then(() => {
+  console.log('Runnnnnnnnnn');
+  app.listen(process.env.PORT || PORT, () => {
+    console.log('Server Start at ' + PORT + ' .... ');
+  })
 
+});
 
 // routes
-app .get('/location', handelLocationRequest);
-app .get('/weather', handelWeatheRequest);
-app .get('/parks', handelParkRequest);
+app.get('/location', handelLocationRequest);
+app.get('/weather', handelWeatheRequest);
+app.get('/parks', handelParkRequest);
 app.get('/movies', handleMoviesRequest);
 app.get('/yelp', handleYelpRequest);
 
@@ -55,7 +61,7 @@ function handelLocationRequest(req, res) {
 
   // Get everything in the database
   //let sqlQuery = `SELECT * FROM location WHERE search_query=$1;`;
-  const sqlQuery = `SELECT * FROM cities`;
+  const sqlQuery = `SELECT * FROM locations`;
   client.query(sqlQuery).then(result => {
     // console.log(result.rows[0].search_query);
     let sqlChecker = false;
@@ -69,11 +75,11 @@ function handelLocationRequest(req, res) {
     if (!sqlChecker) {
       console.log('new entry');
       //console.log(city);
-      superAgent.get(urlGEO).query(query).then(resData =>{
-        const location = new Location( searchQuery , resData.body[0]);
+      superAgent.get(urlGEO).query(query).then(resData => {
+        const location = new Location(searchQuery, resData.body[0]);
         ////// Insert to table
         const safeValues = Object.values(location);
-        const sqlQuery = `INSERT INTO cities(search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4)`;
+        const sqlQuery = `INSERT INTO locations(search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4)`;
         client.query(sqlQuery, safeValues).then(result => {
           res.status(200).json(result);
         }).catch(error => {
@@ -98,9 +104,9 @@ function handelLocationRequest(req, res) {
 function handelWeatheRequest(req, res) {
   const url = `https://api.weatherbit.io/v2.0/forecast/daily?`;
   const queryObj = {
-    lat:req.query.latitude,
-    lon:req.query.longitude,
-    key: WEATHER_CODE_API_KEY ,
+    lat: req.query.latitude,
+    lon: req.query.longitude,
+    key: WEATHER_CODE_API_KEY,
   };
 
   superAgent.get(url).query(queryObj).then(reqData => {
@@ -108,9 +114,9 @@ function handelWeatheRequest(req, res) {
       return new Weather(weather);
     });
 
-    res.send( myWeatherData);
+    res.send(myWeatherData);
   }).catch((error) => {
-    console.error('ERROR',error);
+    console.error('ERROR', error);
     res.status(500).send('there is no data weather');
   });
 }
@@ -125,17 +131,18 @@ function handelParkRequest(req, res) {
 
     res.send(myParkData);
   }).catch((error) => {
-    console.error('ERROR',error);
+    console.error('ERROR', error);
     req.status(500).send('there is no data park');
   });
 }
 //movies
-function handleMoviesRequest (req, res) {
+function handleMoviesRequest(req, res) {
   const searchQuery = req.query.search_query;
   const url = `https://api.themoviedb.org/3/search/movie?api_key=${MOVIE_API_KEY}&query=${searchQuery}&page=1&sort_by=popularity.desc&include_adult=false`;
 
   if (!searchQuery) { //for empty request
-    res.status(404).send('no search query was provided'); }
+    res.status(404).send('no search query was provided');
+  }
 
   superAgent.get(url).then(resData => {
     const moviesData = resData.body.results.map(movie => {
@@ -148,7 +155,7 @@ function handleMoviesRequest (req, res) {
   });
 }
 //yelp
-function handleYelpRequest (req, res) {
+function handleYelpRequest(req, res) {
   const searchQuery = req.query.search_query;
   const yelpOffset = req.query.page * 5 - 5;
   const url = `https://api.yelp.com/v3/businesses/search?term=restaurants&location=${searchQuery}&limit=5&offset=${yelpOffset}`;
@@ -163,12 +170,12 @@ function handleYelpRequest (req, res) {
     });
     res.status(200).send(yelpData);
   }).catch(e => {
-    console.log('error', e);
+    console.log('error');
     res.status(500).send(' no restaurants listed in this area!!!!');
   });
 }
 // constructors
-function Location( searchQuery,data) {
+function Location(searchQuery, data) {
   this.search_query = searchQuery;
   this.formatted_query = data.display_name;
   this.latitude = data.lat;
@@ -182,8 +189,8 @@ function Weather(data) {
 // constructor function formate the park responed data
 function Park(data) {
   this.name = data.name;
-  this.description=data.description;
-  this.address =`${data.addresses[0].linel} ${data.addresses[0].city} ${data.addresses[0].linel} ${data.addresses[0].statecode}  ${data.addresses[0].postalcode}  ` ;
+  this.description = data.description;
+  this.address = `${data.addresses[0].linel} ${data.addresses[0].city} ${data.addresses[0].linel} ${data.addresses[0].statecode}  ${data.addresses[0].postalcode}  `;
   this.fee = data.fees[0] || '0.00';
   this.Park_url = data.url;
 }
@@ -205,8 +212,6 @@ function Yelp(data) {
   this.rating = data.rating;
   this.url = data.url;
 }
-//test the server
-app.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
 
 // Error Handler Routes
 app.use('*', notFoundHandler);
@@ -215,15 +220,16 @@ function notFoundHandler(request, response) {
 }
 
 // Connect to DB and Start the Web Server
-client.connect().then(() => {
-  app.listen(process.env.PORT, () => {
-    console.log('Connected to database:', client.connectionParameters.database) //show what database we connected to
-    console.log('app up on', PORT);
-  });
+/*client.connect().then(() => {
+
 }).catch(error => {
   console.log('error', error);
 });
-
+app.listen(process.env.PORT, () => {
+  //console.log('Connected to database:', client.connectionParameters.database) //show what database we connected to
+  console.log('app up on', PORT);
+});
+*/
 
 
 
