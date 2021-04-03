@@ -219,17 +219,5 @@ function notFoundHandler(request, response) {
   response.status(404).send('huh?');
 }
 
-// Connect to DB and Start the Web Server
-/*client.connect().then(() => {
-
-}).catch(error => {
-  console.log('error', error);
-});
-app.listen(process.env.PORT, () => {
-  //console.log('Connected to database:', client.connectionParameters.database) //show what database we connected to
-  console.log('app up on', PORT);
-});
-*/
-
 
 
